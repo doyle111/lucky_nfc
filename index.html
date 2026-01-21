@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>오늘의 개인 운세</title>
+
+<style>
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #111 0%, #000 70%);
+  color: #eee;
+  font-family: "Noto Serif KR", serif;
+}
+
+.container {
+  max-width: 420px;
+  margin: auto;
+  padding: 24px;
+}
+
+.header {
+  position: relative;
+  margin-bottom: 32px;
+}
+
+.header h1 {
+  font-size: 26px;
+  margin: 0;
+}
+
+.version {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  font-size: 12px;
+  color: #777;
+}
+
+.intro {
+  font-size: 15px;
+  line-height: 1.8;
+  color: #ccc;
+  margin-bottom: 28px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+input[type="date"] {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  font-size: 15px;
+  margin-bottom: 22px;
+}
+
+.options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+.option {
+  padding: 14px;
+  border-radius: 14px;
+  background: #1a1a1a;
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid #333;
+}
+
+.option.active {
+  border-color: #c9a24d;
+  background: #2a2416;
+  color: #f3d88c;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  font-size: 16px;
+  background: linear-gradient(135deg, #c9a24d, #8c6b2f);
+  color: #000;
+  cursor: pointer;
+}
+
+.result {
+  display: none;
+  margin-top: 34px;
+  padding: 22px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 18px;
+  line-height: 1.9;
+  font-size: 15px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>오늘의 개인 운세</h1>
+    <div class="version">도일.ver</div>
+  </div>
+
+  <div class="intro">
+    오늘의 운세는 좋고 나쁨을 단정하지 않습니다.<br>
+    타고난 기질 위에 <b>오늘 어떤 기운이 스쳐 지나가는지</b>를 살펴봅니다.<br>
+    흐름을 알면, 선택은 훨씬 가벼워집니다.
+  </div>
+
+  <label>생년월일</label>
+  <input type="date" id="birth">
+
+  <div class="options">
+    <div class="option" data-type="overall">총운</div>
+    <div class="option" data-type="love">연애운</div>
+    <div class="option" data-type="money">재물운</div>
+    <div class="option" data-type="work">직장·학업운</div>
+  </div>
+
+  <button onclick="showFortune()">오늘의 흐름 해석</button>
+
+  <div class="result" id="result"></div>
+
+</div>
+
+<script>
+let selectedType = null;
+
+document.querySelectorAll(".option").forEach(opt => {
+  opt.addEventListener("click", () => {
+    document.querySelectorAll(".option").forEach(o => o.classList.remove("active"));
+    opt.classList.add("active");
+    selectedType = opt.dataset.type;
+  });
+});
+
+const zodiacs = ["쥐","소","호랑이","토끼","용","뱀","말","양","원숭이","닭","개","돼지"];
+
+const fortuneText = {
+  overall: {
+    good: `
+      오늘은 전반적인 기운의 흐름이 비교적 순조롭습니다.<br><br>
+      외부에서 들어오는 자극이 당신의 기질을 크게 흔들지 않으며,
+      이미 쌓아온 선택들이 자연스럽게 이어지는 날입니다.<br><br>
+      무언가를 새로 시작하기보다는,
+      기존의 방향을 점검하고 미세하게 조율하는 쪽이
+      훨씬 안정적인 결과로 이어질 수 있습니다.
+    `,
+    normal: `
+      오늘의 기운은 강하지도 약하지도 않습니다.<br><br>
+      눈에 띄는 성과보다는,
+      지금의 위치를 유지하는 데 의미가 있는 흐름입니다.<br><br>
+      억지로 결과를 만들려 하기보다
+      하루의 리듬을 지키는 것이
+      전체 운의 균형을 지켜주는 선택이 됩니다.
+    `,
+    bad: `
+      오늘은 기운이 분산되기 쉬운 날입니다.<br><br>
+      의욕에 비해 체력이나 집중력이 따라주지 않을 수 있으며,
+      사소한 판단에서 소모가 발생하기 쉽습니다.<br><br>
+      중요한 결정은 미루고,
+      이미 정해진 일만 차분히 처리하는 것이
+      기신을 키우지 않는 방법입니다.
+    `
+  },
+
+  love: {
+    good: `
+      감정의 흐름이 비교적 부드럽게 이어지는 날입니다.<br><br>
+      말 한마디, 표정 하나가
+      상대에게 긍정적으로 전달되기 쉬운 기운입니다.<br><br>
+      꾸미지 않은 진심이 오히려
+      관계의 온도를 자연스럽게 높여줍니다.
+    `,
+    normal: `
+      오늘의 연애운은 조율의 성격이 강합니다.<br><br>
+      가까워지기보다는
+      서로의 간격을 확인하는 흐름이므로,
+      서두르지 않는 태도가 중요합니다.<br><br>
+      기다림 자체가 신뢰로 작용할 수 있습니다.
+    `,
+    bad: `
+      감정 기복이 생기기 쉬운 날입니다.<br><br>
+      평소라면 넘길 수 있는 말에도
+      마음이 흔들릴 수 있습니다.<br><br>
+      오늘은 표현보다 절제가
+      관계를 지키는 쪽으로 작용합니다.
+    `
+  },
+
+  money: {
+    good: `
+      재물의 흐름이 막히지 않고 이어지는 날입니다.<br><br>
+      큰 이익보다는
+      작지만 실속 있는 선택이
+      장기적으로 도움이 됩니다.<br><br>
+      계획된 소비는 기운을 보완합니다.
+    `,
+    normal: `
+      수입과 지출의 균형이 중요한 날입니다.<br><br>
+      무리한 확장보다는
+      현재의 구조를 점검하는 것이 좋습니다.<br><br>
+      돈의 흐름을 관리하는 태도가
+      운을 안정시킵니다.
+    `,
+    bad: `
+      재물운에서 소모가 발생하기 쉬운 날입니다.<br><br>
+      충동적인 지출이나
+      즉흥적인 판단은 피하는 편이 좋습니다.<br><br>
+      오늘은 지키는 쪽이
+      결과적으로 남는 선택입니다.
+    `
+  },
+
+  work: {
+    good: `
+      집중력이 비교적 잘 살아나는 날입니다.<br><br>
+      밀려 있던 일이나
+      정리가 필요했던 업무를 처리하기에 적합합니다.<br><br>
+      결과보다 과정에 충실할수록
+      평가도 자연스럽게 따라옵니다.
+    `,
+    normal: `
+      업무 흐름은 평이합니다.<br><br>
+      새로운 시도보다는
+      익숙한 방식이 더 안정적인 결과를 만듭니다.<br><br>
+      루틴을 지키는 것이
+      오늘의 최선입니다.
+    `,
+    bad: `
+      의욕은 있으나
+      외부 흐름이 받쳐주지 않는 날입니다.<br><br>
+      억지로 밀어붙이면
+      피로만 누적될 수 있습니다.<br><br>
+      오늘은 속도를 늦추는 것이
+      오히려 현명한 선택입니다.
+    `
+  }
+};
+
+function showFortune() {
+  const birth = document.getElementById("birth").value;
+  if (!birth || !selectedType) {
+    alert("생년월일과 운세 항목을 선택해주세요.");
+    return;
+  }
+
+  const year = new Date(birth).getFullYear();
+  const zodiac = zodiacs[(year - 4) % 12];
+
+  const todayEnergy = new Date().getDate() % 3;
+  const relation = todayEnergy === 0 ? "good" : todayEnergy === 1 ? "normal" : "bad";
+
+  const resultText = `
+    <b>${zodiac}띠 기준 오늘의 해석</b><br><br>
+    ${fortuneText[selectedType][relation]}<br><br>
+    오늘은 기운을 새로 만들기보다,
+    <b>이미 가진 흐름을 어떻게 쓰느냐</b>가 더 중요한 날입니다.
+  `;
+
+  const result = document.getElementById("result");
+  result.innerHTML = resultText;
+  result.style.display = "block";
+}
+</script>
+
+</body>
+</html>
